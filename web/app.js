@@ -1030,9 +1030,15 @@ const PDFViewerApplication = {
     });
 
     pdfDocument.getPermissions().then((permissions) => {
-      // Disable Copy
-      if(permissions["0"] & 0x04){
-        this.pdfViewer["textLayerMode"] = 0;
+      // Rest default, this is added in case when a new PDF is opened after
+      // a PDF with permissions set
+      this.pdfViewer["textLayerMode"] = AppOptions.get("textLayerMode");
+
+      if(permissions){
+        // Disable Copy
+        if(permissions["0"] & 0x04){
+          this.pdfViewer["textLayerMode"] = 0;
+        }
       }
 
     });
