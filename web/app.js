@@ -1029,6 +1029,14 @@ const PDFViewerApplication = {
       });
     });
 
+    pdfDocument.getPermissions().then((permissions) => {
+      // Disable Copy
+      if(permissions["0"] & 0x04){
+        this.pdfViewer["textLayerMode"] = 0;
+      }
+
+    });
+
     // Since the `setInitialView` call below depends on this being resolved,
     // fetch it early to avoid delaying initial rendering of the PDF document.
     const pageLayoutPromise = pdfDocument.getPageLayout().catch(function() {
