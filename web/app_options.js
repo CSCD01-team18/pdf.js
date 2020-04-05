@@ -147,6 +147,10 @@ const defaultOptions = {
     /** @type {boolean} */
     value: 0,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE,
+  },  
+  respectPermissions: {
+    value: false,
+    kind: OptionKind.VIEWER + OptionKind.PREFERENCE,
   },
 
   cMapPacked: {

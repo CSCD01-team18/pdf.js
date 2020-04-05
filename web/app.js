@@ -1029,19 +1029,22 @@ const PDFViewerApplication = {
       });
     });
 
-    pdfDocument.getPermissions().then((permissions) => {
-      // Rest default, this is added in case when a new PDF is opened after
-      // a PDF with permissions set
-      this.pdfViewer["textLayerMode"] = AppOptions.get("textLayerMode");
+    // check if permissions are to be respected by firefox's preference
+    if(AppOptions.get("respectPermissions")){
+      pdfDocument.getPermissions().then((permissions) => {
+        // Rest default, this is added in case when a new PDF is opened after
+        // a PDF with permissions set
+        this.pdfViewer["textLayerMode"] = AppOptions.get("textLayerMode");
 
-      if(permissions){
-        // Disable Copy
-        if(permissions["0"] & 0x04){
-          this.pdfViewer["textLayerMode"] = 0;
+        if(permissions){
+          // Disable Copy
+          if(permissions["0"] & 0x04){
+            this.pdfViewer["textLayerMode"] = 0;
+          }
         }
-      }
 
-    });
+      });
+    }
 
     // Since the `setInitialView` call below depends on this being resolved,
     // fetch it early to avoid delaying initial rendering of the PDF document.
