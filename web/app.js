@@ -1032,14 +1032,15 @@ const PDFViewerApplication = {
     // check if permissions are to be respected by firefox's preference
     if(AppOptions.get("respectPermissions")){
       pdfDocument.getPermissions().then((permissions) => {
-        // Rest default, this is added in case when a new PDF is opened after
+        // Restore default, this is added in case when a new PDF is opened after
         // a PDF with permissions set
-        this.pdfViewer["textLayerMode"] = AppOptions.get("textLayerMode");
+
+        this.pdfViewer["enableTextLayerCopyProtection"] = false;
 
         if(permissions){
           // Disable Copy
           if(permissions["0"] & 0x04){
-            this.pdfViewer["textLayerMode"] = 0;
+            this.pdfViewer["enableTextLayerCopyProtection"] = true;
           }
         }
 

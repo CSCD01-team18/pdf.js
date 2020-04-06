@@ -26,6 +26,8 @@ const EXPAND_DIVS_TIMEOUT = 300; // ms
  * @property {PDFFindController} findController
  * @property {boolean} enhanceTextSelection - Option to turn on improved
  *   text selection.
+ * @property {boolean} enableCopyProtection - Option to disable copy /
+ *   cutting of text by users
  */
 
 /**
@@ -42,6 +44,7 @@ class TextLayerBuilder {
     viewport,
     findController = null,
     enhanceTextSelection = false,
+    enableCopyProtection = false,
   }) {
     this.textLayerDiv = textLayerDiv;
     this.eventBus = eventBus;
@@ -57,6 +60,7 @@ class TextLayerBuilder {
     this.findController = findController;
     this.textLayerRenderTask = null;
     this.enhanceTextSelection = enhanceTextSelection;
+    this.enableCopyProtection = enableCopyProtection;
 
     this._onUpdateTextLayerMatches = null;
     this._bindMouse();
@@ -431,6 +435,17 @@ class TextLayerBuilder {
       }
       end.classList.remove("active");
     });
+
+    // disallow copy/cut if the PDF is marked as copy protected
+    if (this.enableCopyProtection) {
+      div.addEventListener("copy", event => {
+        event.preventDefault();
+      });
+
+      div.addEventListener("cut", event => {
+        event.preventDefault();
+      });
+    }
   }
 }
 
@@ -443,6 +458,7 @@ class DefaultTextLayerFactory {
    * @param {number} pageIndex
    * @param {PageViewport} viewport
    * @param {boolean} enhanceTextSelection
+   * @param {boolean} enableCopyProtection
    * @param {EventBus} eventBus
    * @returns {TextLayerBuilder}
    */
@@ -451,6 +467,7 @@ class DefaultTextLayerFactory {
     pageIndex,
     viewport,
     enhanceTextSelection = false,
+    enableCopyProtection = false,
     eventBus
   ) {
     return new TextLayerBuilder({
@@ -458,6 +475,7 @@ class DefaultTextLayerFactory {
       pageIndex,
       viewport,
       enhanceTextSelection,
+      enableCopyProtection,
       eventBus,
     });
   }

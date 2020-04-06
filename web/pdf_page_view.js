@@ -44,6 +44,9 @@ import { viewerCompatibilityParams } from "./viewer_compatibility.js";
  *   selection and searching is created, and if the improved text selection
  *   behaviour is enabled. The constants from {TextLayerMode} should be used.
  *   The default value is `TextLayerMode.ENABLE`.
+ * @property {boolean} [enableTextLayerCopyProtection] - Specifies whether a
+ *   PDF has copy protection enabled, if enabled, users should not be able to
+ *   copy / cut text selected in the text layer. The default value is `false`.
  * @property {IPDFAnnotationLayerFactory} annotationLayerFactory
  * @property {string} [imageResourcesPath] - Path for image resources, mainly
  *   for annotation icons. Include trailing slash.
@@ -86,6 +89,8 @@ class PDFPageView {
     this.textLayerMode = Number.isInteger(options.textLayerMode)
       ? options.textLayerMode
       : TextLayerMode.ENABLE;
+    this.enableTextLayerCopyProtection =
+      options.enableTextLayerCopyProtection || false;
     this.imageResourcesPath = options.imageResourcesPath || "";
     this.renderInteractiveForms = options.renderInteractiveForms || false;
     this.useOnlyCssZoom = options.useOnlyCssZoom || false;
@@ -448,6 +453,7 @@ class PDFPageView {
         this.id - 1,
         this.viewport,
         this.textLayerMode === TextLayerMode.ENABLE_ENHANCE,
+        this.enableTextLayerCopyProtection,
         this.eventBus
       );
     }

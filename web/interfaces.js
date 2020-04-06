@@ -146,6 +146,7 @@ class IPDFTextLayerFactory {
    * @param {number} pageIndex
    * @param {PageViewport} viewport
    * @param {boolean} enhanceTextSelection
+   * @param {boolean} enableCopyProtection
    * @param {EventBus} eventBus
    * @returns {TextLayerBuilder}
    */
@@ -154,6 +155,7 @@ class IPDFTextLayerFactory {
     pageIndex,
     viewport,
     enhanceTextSelection = false,
+    enableCopyProtection = false,
     eventBus
   ) {}
 }
