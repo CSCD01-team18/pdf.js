@@ -436,13 +436,22 @@ class TextLayerBuilder {
       end.classList.remove("active");
     });
 
-    // disallow copy/cut if the PDF is marked as copy protected
+    // disallow copy/cut/dragging/context menu if the PDF is marked as
+    // copy protected
     if (this.enableCopyProtection) {
       div.addEventListener("copy", event => {
         event.preventDefault();
       });
 
       div.addEventListener("cut", event => {
+        event.preventDefault();
+      });
+
+      div.addEventListener("dragstart", event => {
+        event.preventDefault();
+      });
+
+      div.addEventListener("contextmenu", event => {
         event.preventDefault();
       });
     }
