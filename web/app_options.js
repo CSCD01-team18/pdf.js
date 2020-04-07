@@ -147,9 +147,9 @@ const defaultOptions = {
     /** @type {boolean} */
     value: 0,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE,
-  },  
+  },
   respectPermissions: {
-    value: false,
+    value: true,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE,
   },
 
