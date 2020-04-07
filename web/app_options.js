@@ -197,6 +197,11 @@ const defaultOptions = {
     value: "",
     kind: OptionKind.API,
   },
+  fontExtraProperties: {
+    /** @type {boolean} */
+    value: false,
+    kind: OptionKind.API,
+  },
   isEvalSupported: {
     /** @type {boolean} */
     value: true,

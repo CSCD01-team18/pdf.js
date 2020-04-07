@@ -87,6 +87,46 @@ var PDF_GLYPH_SPACE_UNITS = 1000;
 // custom one. Windows just refuses to draw glyphs with seac operators.
 var SEAC_ANALYSIS_ENABLED = true;
 
+const EXPORT_DATA_PROPERTIES = [
+  "ascent",
+  "bbox",
+  "black",
+  "bold",
+  "charProcOperatorList",
+  "composite",
+  "data",
+  "defaultVMetrics",
+  "defaultWidth",
+  "descent",
+  "fallbackName",
+  "fontMatrix",
+  "fontType",
+  "isMonospace",
+  "isSerifFont",
+  "isType3Font",
+  "italic",
+  "loadedName",
+  "mimetype",
+  "missingFile",
+  "name",
+  "remeasure",
+  "subtype",
+  "type",
+  "vertical",
+];
+
+const EXPORT_DATA_EXTRA_PROPERTIES = [
+  "cMap",
+  "defaultEncoding",
+  "differences",
+  "isSymbolicFont",
+  "seacMap",
+  "toFontChar",
+  "toUnicode",
+  "vmetrics",
+  "widths",
+];
+
 var FontFlags = {
   FixedPitch: 1,
   Serif: 2,
@@ -570,7 +610,7 @@ var Font = (function FontClosure() {
     }
 
     this.cidEncoding = properties.cidEncoding;
-    this.vertical = properties.vertical;
+    this.vertical = !!properties.vertical;
     if (this.vertical) {
       this.vmetrics = properties.vmetrics;
       this.defaultVMetrics = properties.defaultVMetrics;
@@ -1258,12 +1298,18 @@ var Font = (function FontClosure() {
       return shadow(this, "renderer", renderer);
     },
 
-    exportData: function Font_exportData() {
-      // TODO remove enumerating of the properties, e.g. hardcode exact names.
-      var data = {};
-      for (var i in this) {
-        if (this.hasOwnProperty(i)) {
-          data[i] = this[i];
+    exportData(extraProperties = false) {
+      const exportDataProperties = extraProperties
+        ? [...EXPORT_DATA_PROPERTIES, ...EXPORT_DATA_EXTRA_PROPERTIES]
+        : EXPORT_DATA_PROPERTIES;
+
+      const data = Object.create(null);
+      let property, value;
+      for (property of exportDataProperties) {
+        value = this[property];
+        // Ignore properties that haven't been explicitly set.
+        if (value !== undefined) {
+          data[property] = value;
         }
       }
       return data;
@@ -3119,10 +3165,6 @@ var Font = (function FontClosure() {
     },
 
     get spaceWidth() {
-      if ("_shadowWidth" in this) {
-        return this._shadowWidth;
-      }
-
       // trying to estimate space character width
       var possibleSpaceReplacements = ["space", "minus", "one", "i", "I"];
       var width;
@@ -3137,10 +3179,8 @@ var Font = (function FontClosure() {
         var glyphUnicode = glyphsUnicodeMap[glyphName];
         // finding the charcode via unicodeToCID map
         var charcode = 0;
-        if (this.composite) {
-          if (this.cMap.contains(glyphUnicode)) {
-            charcode = this.cMap.lookup(glyphUnicode);
-          }
+        if (this.composite && this.cMap.contains(glyphUnicode)) {
+          charcode = this.cMap.lookup(glyphUnicode);
         }
         // ... via toUnicode map
         if (!charcode && this.toUnicode) {
@@ -3157,10 +3197,7 @@ var Font = (function FontClosure() {
         }
       }
       width = width || this.defaultWidth;
-      // Do not shadow the property here. See discussion:
-      // https://github.com/mozilla/pdf.js/pull/2127#discussion_r1662280
-      this._shadowWidth = width;
-      return width;
+      return shadow(this, "spaceWidth", width);
     },
 
     charToGlyph: function Font_charToGlyph(charcode, isSpace) {
@@ -3216,10 +3253,14 @@ var Font = (function FontClosure() {
         };
       }
 
-      var fontChar =
-        typeof fontCharCode === "number"
-          ? String.fromCodePoint(fontCharCode)
-          : "";
+      let fontChar = "";
+      if (typeof fontCharCode === "number") {
+        if (fontCharCode <= 0x10ffff) {
+          fontChar = String.fromCodePoint(fontCharCode);
+        } else {
+          warn(`charToGlyph - invalid fontCharCode: ${fontCharCode}`);
+        }
+      }
 
       var glyph = this.glyphCache[charcode];
       if (
@@ -3318,7 +3359,7 @@ var ErrorFont = (function ErrorFontClosure() {
     charsToGlyphs: function ErrorFont_charsToGlyphs() {
       return [];
     },
-    exportData: function ErrorFont_exportData() {
+    exportData(extraProperties = false) {
       return { error: this.error };
     },
   };
@@ -3601,6 +3642,22 @@ var Type1Font = (function Type1FontClosure() {
 
     getGlyphMapping: function Type1Font_getGlyphMapping(properties) {
       var charstrings = this.charstrings;
+
+      if (properties.composite) {
+        const charCodeToGlyphId = Object.create(null);
+        // Map CIDs directly to GIDs.
+        for (
+          let glyphId = 0, charstringsLen = charstrings.length;
+          glyphId < charstringsLen;
+          glyphId++
+        ) {
+          const charCode = properties.cMap.charCodeOf(glyphId);
+          // Add 1 because glyph 0 is duplicated.
+          charCodeToGlyphId[charCode] = glyphId + 1;
+        }
+        return charCodeToGlyphId;
+      }
+
       var glyphNames = [".notdef"],
         glyphId;
       for (glyphId = 0; glyphId < charstrings.length; glyphId++) {
